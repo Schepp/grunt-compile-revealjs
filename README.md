@@ -66,15 +66,17 @@ Every JSON file represents a whole slide deck and needs to follow this scheme:
 }
 ```
 
-```layout``` defines the outer hull of your presentation, basically everything except what is inside ```<div class="slides">```. Place a ```{{ slides }}``` Where the slides should be inserted later. E.g.:
+```layout``` defines a template file for the outer hull of your presentation, basically everything except what is inside ```<div class="slides">```. Place a ```{{ slides }}``` Where the slides should be inserted later. E.g.:
 
  ```html
  <div class="slides">{{ slides }}</div>
  ```
 
+The path is relative to the Gruntfile.
+
 ```slides```is an array of all the slides.
 
-```template``` defines for each slide which HTML template to use.
+```template``` defines for each slide which HTML template to use (relative to the Gruntfile).
 
 ```data``` holds all the values to put into the template. E.g. the value ```headline``` value would be inserted into the template at a placeholder named ```{{ headline }}```.
 
