@@ -23,6 +23,8 @@ module.exports = function(grunt) {
                 entry,
                 regex;
 
+            html = html.replace('<section', '<section data-depth="' + currentDepth + '"');
+
             for (entry in slide.data) {
               if (slide.data.hasOwnProperty(entry)) {
                 regex = new RegExp('{{ ' + entry + ' }}', 'g');
@@ -35,16 +37,18 @@ module.exports = function(grunt) {
           renderSubslides = function(subslides) {
             var html = "";
 
+            currentDepth++;
+
             subslides.forEach(function(subslide) {
               html += renderSlide(subslide);
             });
 
+            currentDepth--;
+
             return html;
           },
           renderSlide = function(slide) {
-            var html = "",
-                entry,
-                regex;
+            var html = "";
 
             if (slide.subslides) {
               html += renderCurrentSlide(slide);
@@ -60,7 +64,9 @@ module.exports = function(grunt) {
             }
 
             return html;
-          };
+          },
+          currentDepth = 1;
+
 
       sources = sources.filter(function(filepath) {
         // Warn on and remove invalid source files (if nonull was set).
