@@ -23,21 +23,27 @@ module.exports = function(grunt) {
                 entry,
                 regex;
 
-            if (slide.slides) {
-              html += '<section>';
-
-              slide.slides.forEach(function(subslide) {
+            if (slide.subslides) {
+              slide.subslides.forEach(function(subslide) {
                 html += renderSlide(subslide);
               });
-
-              html += '</section>';
             } else {
-              html = grunt.file.read(slide.template);
+              if (slide.slides) {
+                html += '<section>';
 
-              for (entry in slide.data) {
-                if (slide.data.hasOwnProperty(entry)) {
-                  regex = new RegExp('{{ ' + entry + ' }}', 'g');
-                  html = html.replace(regex, slide.data[ entry ]);
+                slide.slides.forEach(function(subslide) {
+                  html += renderSlide(subslide);
+                });
+
+                html += '</section>';
+              } else {
+                html = grunt.file.read(slide.template);
+
+                for (entry in slide.data) {
+                  if (slide.data.hasOwnProperty(entry)) {
+                    regex = new RegExp('{{ ' + entry + ' }}', 'g');
+                    html = html.replace(regex, slide.data[ entry ]);
+                  }
                 }
               }
             }
