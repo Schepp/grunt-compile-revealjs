@@ -24,6 +24,8 @@ module.exports = function(grunt) {
                 regex;
 
             if (slide.subslides) {
+              html = grunt.file.read(slide.template);
+
               slide.subslides.forEach(function(subslide) {
                 html += renderSlide(subslide);
               });
