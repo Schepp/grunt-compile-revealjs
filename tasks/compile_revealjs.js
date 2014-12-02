@@ -18,35 +18,44 @@ module.exports = function(grunt) {
     this.files.forEach(function(f) {
       var path = require('path'),
           sources = grunt.file.expand({}, f.src),
+          renderCurrentSlide = function(slide) {
+            var html = grunt.file.read(slide.template),
+                entry,
+                regex;
+
+            for (entry in slide.data) {
+              if (slide.data.hasOwnProperty(entry)) {
+                regex = new RegExp('{{ ' + entry + ' }}', 'g');
+                html = html.replace(regex, slide.data[ entry ]);
+              }
+            }
+
+            return html;
+          },
+          renderSubslides = function(subslides) {
+            var html = "";
+
+            subslides.forEach(function(subslide) {
+              html += renderSlide(subslide);
+            });
+
+            return html;
+          },
           renderSlide = function(slide) {
             var html = "",
                 entry,
                 regex;
 
             if (slide.subslides) {
-              html = grunt.file.read(slide.template);
-
-              slide.subslides.forEach(function(subslide) {
-                html += renderSlide(subslide);
-              });
+              html += renderCurrentSlide(slide);
+              html += renderSubslides(slide.subslides);
             } else {
               if (slide.slides) {
                 html += '<section>';
-
-                slide.slides.forEach(function(subslide) {
-                  html += renderSlide(subslide);
-                });
-
+                html += renderSubslides(slide.slides);
                 html += '</section>';
               } else {
-                html = grunt.file.read(slide.template);
-
-                for (entry in slide.data) {
-                  if (slide.data.hasOwnProperty(entry)) {
-                    regex = new RegExp('{{ ' + entry + ' }}', 'g');
-                    html = html.replace(regex, slide.data[ entry ]);
-                  }
-                }
+                html += renderCurrentSlide(slide);
               }
             }
 

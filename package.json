@@ -1,7 +1,7 @@
 {
   "name": "grunt-compile-revealjs",
   "description": "Compiles reveal.js slide decks from a JSON configuration and HTML partials",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "homepage": "https://github.com/Schepp/grunt-compile-revealjs",
   "author": {
     "name": "Christian Schaefer",
