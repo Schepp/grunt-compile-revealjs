@@ -18,12 +18,91 @@ module.exports = function(grunt) {
     this.files.forEach(function(f) {
       var path = require('path'),
           sources = grunt.file.expand({}, f.src),
+          setConfig = function(html, config) {
+            var globalAttributes = [
+                  'accesskey',
+                  'class',
+                  'contenteditable',
+                  'contextmenu',
+                  'dir',
+                  'draggable',
+                  'dropzone',
+                  'hidden',
+                  'id',
+                  'lang',
+                  'spellcheck',
+                  'style',
+                  'tabindex',
+                  'title',
+                  'translate'
+                ],
+                attribute,
+                sectionHTML,
+                presentAttributesString,
+                presentAttributesArray,
+                presentAttributes = {};
+
+            sectionHTML = html.replace(/[\s\S]*(<section[^>]*>)[\s\S]*/, '$1');
+            presentAttributesString = sectionHTML.replace(/<section\s*(.*)>/, '$1');
+            presentAttributesString = presentAttributesString.replace(/([^'"])\s/g, '$1§');
+            presentAttributesArray = presentAttributesString.split(' ');
+            if (presentAttributesArray.length) {
+              presentAttributesArray.forEach(function(attribute) {
+                var keyvalueArray = attribute.split('='),
+                    key = keyvalueArray[ 0 ].replace(/^data\-/, '').toLowerCase(),
+                    value;
+
+                if (keyvalueArray.length > 1) {
+                  value = keyvalueArray[ 1 ]
+                    .replace(/§/g, ' ')
+                    .replace(/^["']/, '')
+                    .replace(/["']$/, '');
+
+                  if (key === 'id') {
+                    value = value
+                      .replace(/[^_a-z0-9]/g, "-");
+                  }
+
+                  presentAttributes[ key ] = value;
+                }
+              });
+            }
+
+            for (attribute in config) {
+              if (config.hasOwnProperty(attribute)) {
+                if (attribute === 'id') {
+                  config[ attribute ] = config[ attribute ].replace(/[^_a-z0-9]/g, "-");
+                }
+
+                presentAttributes[ attribute.toLowerCase() ] = config[ attribute ];
+              }
+            }
+
+            sectionHTML = '<section';
+            for (attribute in presentAttributes) {
+              if (presentAttributes.hasOwnProperty(attribute)) {
+                sectionHTML += ' ';
+                if (globalAttributes.indexOf(attribute) !== -1) {
+                  sectionHTML += attribute;
+                } else {
+                  sectionHTML += 'data-' + attribute;
+                }
+                sectionHTML += '="';
+                sectionHTML += presentAttributes[ attribute ];
+                sectionHTML += '"';
+              }
+            }
+            sectionHTML += '>';
+            html = html.replace(/<section[^>]*>/, sectionHTML);
+
+            return html;
+          },
           renderCurrentSlide = function(slide) {
             var html = grunt.file.read(slide.template),
                 entry,
                 regex;
 
-            html = html.replace('<section', '<section data-depth="' + currentDepth + '"');
+            html = setConfig(html, slide.config);
 
             for (entry in slide.data) {
               if (slide.data.hasOwnProperty(entry)) {
@@ -34,39 +113,36 @@ module.exports = function(grunt) {
 
             return html;
           },
-          renderSubslides = function(subslides) {
-            var html = "";
-
-            currentDepth++;
-
-            subslides.forEach(function(subslide) {
-              html += renderSlide(subslide);
-            });
-
-            currentDepth--;
-
-            return html;
-          },
           renderSlide = function(slide) {
             var html = "";
 
-            if (slide.subslides) {
-              html += renderCurrentSlide(slide);
-              html += renderSubslides(slide.subslides);
+            if (slide.slides) {
+              html += '<section>';
+              html += renderSubslides(slide.slides);
+              html += '</section>';
+              html = setConfig(html, slide.config);
             } else {
-              if (slide.slides) {
-                html += '<section>';
-                html += renderSubslides(slide.slides);
-                html += '</section>';
-              } else {
-                html += renderCurrentSlide(slide);
-              }
+              html += renderCurrentSlide(slide);
             }
 
             return html;
           },
-          currentDepth = 1;
+          renderVariant = function(variant, slides) {
+            var html = "";
 
+            slides.forEach(function(slide) {
+              if (
+                slide.exclude &&
+                slide.exclude.forEach &&
+                slide.exclude.indexOf(variant) !== -1
+              ) {
+                return;
+              }
+              html += renderSlide(slide);
+            });
+
+            return html;
+          };
 
       sources = sources.filter(function(filepath) {
         // Warn on and remove invalid source files (if nonull was set).
@@ -80,23 +156,28 @@ module.exports = function(grunt) {
       });
 
       sources.forEach(function(filepath) {
-        var configJson = grunt.file.read(filepath),
-            config = JSON.parse(configJson),
+        var master = path.basename(filepath).split('.')[ 0 ],
+            config = JSON.parse(grunt.file.read(filepath)),
             regex = new RegExp('{{ slides }}'),
-            layoutHtml = grunt.file.read(config.layout),
-            slidesHtml = '',
-            dest;
+            layoutHtml = grunt.file.read(config.layout);
 
-        config.slides.forEach(function(slide) {
-          slidesHtml += renderSlide(slide);
+        grunt.log.writeln(filepath);
+        grunt.log.writeln(path.basename(filepath));
+
+        config.variants.push(master);
+        config.variants.forEach(function(variant) {
+          var html = renderVariant(variant, config.slides),
+              destination;
+
+          html = layoutHtml.replace(regex, html);
+          destination = filepath
+            .replace(master, variant)
+            .replace('.json', '.html');
+          destination = path.basename(destination);
+          destination = f.dest ? f.dest + '/' + destination : destination;
+
+          grunt.file.write(destination, html);
         });
-
-        layoutHtml = layoutHtml.replace(regex, slidesHtml);
-        dest = filepath.replace('.json', '.html');
-        dest = path.basename(dest);
-        dest = f.dest ? f.dest + '/' + dest : dest;
-
-        grunt.file.write(dest, layoutHtml);
       });
     });
   });
