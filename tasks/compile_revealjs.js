@@ -141,6 +141,8 @@ module.exports = function(grunt) {
               html += renderSlide(slide);
             });
 
+            html = html.replace(/@@variant/g, variant);
+
             return html;
           };
 
