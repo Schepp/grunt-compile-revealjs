@@ -128,7 +128,8 @@ module.exports = function(grunt) {
             return html;
           },
           renderVariant = function(variant, slides) {
-            var html = "";
+            var html = '',
+                regex = new RegExp('@@variant', 'g');
 
             slides.forEach(function(slide) {
               if (
@@ -141,7 +142,7 @@ module.exports = function(grunt) {
               html += renderSlide(slide);
             });
 
-            html = html.replace(/@@variant/g, variant);
+            html = html.replace(regex, variant);
 
             return html;
           };
@@ -160,7 +161,6 @@ module.exports = function(grunt) {
       sources.forEach(function(filepath) {
         var master = path.basename(filepath).split('.')[ 0 ],
             config = JSON.parse(grunt.file.read(filepath)),
-            regex = new RegExp('{{ slides }}'),
             layoutHtml = grunt.file.read(config.layout);
 
         grunt.log.writeln(filepath);
@@ -169,9 +169,14 @@ module.exports = function(grunt) {
         config.variants.push(master);
         config.variants.forEach(function(variant) {
           var html = renderVariant(variant, config.slides),
+              regexEmptyAttribute = new RegExp('\\s[^\\s]+=[\'"]{0,1}{{ [^\\s]+ }}[\'"]{0,1}', 'g'),
+              regexEmpty = new RegExp('{{ [^\\s]+ }}', 'g'),
+              regexSlides = new RegExp('{{ slides }}'),
               destination;
 
-          html = layoutHtml.replace(regex, html);
+          html = html.replace(regexEmptyAttribute, '');
+          html = html.replace(regexEmpty, '');
+          html = layoutHtml.replace(regexSlides, html);
           destination = filepath
             .replace(master, variant)
             .replace('.json', '.html');
