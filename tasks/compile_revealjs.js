@@ -170,11 +170,13 @@ module.exports = function(grunt) {
         config.variants.forEach(function(variant) {
           var html = renderVariant(variant, config.slides),
               regexEmptyAttribute = new RegExp('\\s[^\\s]+=[\'"]{0,1}{{ [^\\s]+ }}[\'"]{0,1}', 'g'),
+              regexEmptyElements = new RegExp('<[^>]+>\\s*{{ [^\\s]+ }}</[^>]+>', 'g'),
               regexEmpty = new RegExp('{{ [^\\s]+ }}', 'g'),
               regexSlides = new RegExp('{{ slides }}'),
               destination;
 
           html = html.replace(regexEmptyAttribute, '');
+          html = html.replace(regexEmptyElements, '');
           html = html.replace(regexEmpty, '');
           html = layoutHtml.replace(regexSlides, html);
           destination = filepath
