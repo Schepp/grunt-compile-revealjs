@@ -188,7 +188,6 @@ module.exports = function (grunt) {
                     destination = path.basename(destination);
                     destination = f.dest ? f.dest + '/' + destination : destination;
 
-                    grunt.log.writeln(destination);
                     grunt.file.write(destination, html);
                 });
 
