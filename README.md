@@ -72,7 +72,7 @@ Every JSON file represents a whole slide deck and needs to follow this scheme:
  <div class="slides">{{ slides }}</div>
  ```
 
-The path is relative to the Gruntfile.
+The path to that JSON is relative to the Gruntfile - whereas all paths mentioned inside it are then relative to the JSON.
 
 ```slides```is an array of all the slides.
 
