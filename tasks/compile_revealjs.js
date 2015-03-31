@@ -133,6 +133,13 @@ module.exports = function (grunt) {
 
                     slides.forEach(function (slide) {
                         if (
+                          slide.include &&
+                          slide.include.forEach &&
+                          slide.include.indexOf(variant) === -1
+                        ) {
+                          return;
+                        }
+                        if (
                             slide.exclude &&
                             slide.exclude.forEach &&
                             slide.exclude.indexOf(variant) !== -1
